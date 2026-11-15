@@ -1,0 +1,17 @@
+﻿# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# App/runtime
+storage/app/*.sqlite
+storage/app/*.db
+*.log
+
+# Local env overrides
+config/*.local.php
+.env
+
