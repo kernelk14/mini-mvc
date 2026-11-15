@@ -118,6 +118,11 @@ class Core_Session
 
     function flash($key, $value)
     {
-        $this->set($key, $value);
+        $this->set('_flash_' . $key, $value);
+    }
+
+    function getFlash($key, $default = null)
+    {
+        return $this->pull('_flash_' . $key, $default);
     }
 }

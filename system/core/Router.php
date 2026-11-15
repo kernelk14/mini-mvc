@@ -31,13 +31,16 @@ class Core_Router
         while ($i < $count) {
             $r = Core_Router::$routes[$i];
             $m = $r['method'];
-            if (($m === $method || $m === 'ANY') && $r['path'] === $path) {
-                $parsed = $this->parseHandler($r['handler']);
-                return array(
-                    'controller' => $parsed['controller'],
-                    'action'     => $parsed['action'],
-                    'params'     => array(),
-                );
+            if ($m === $method || $m === 'ANY') {
+                $params = $this->matchPath($r['path'], $path);
+                if ($params !== false) {
+                    $parsed = $this->parseHandler($r['handler']);
+                    return array(
+                        'controller' => $parsed['controller'],
+                        'action'     => $parsed['action'],
+                        'params'     => $params,
+                    );
+                }
             }
             $i++;
         }
@@ -63,6 +66,45 @@ class Core_Router
             'action'     => $action,
             'params'     => $params,
         );
+    }
+
+    function matchPath($routePath, $requestPath)
+    {
+        $routePath = (string)$routePath;
+        $requestPath = (string)$requestPath;
+        if ($routePath === $requestPath) {
+            return array();
+        }
+        if (strpos($routePath, '{') === false) {
+            return false;
+        }
+
+        $routeTrim = trim($routePath, '/');
+        $reqTrim = trim($requestPath, '/');
+        if ($routeTrim === '' || $reqTrim === '') {
+            return false;
+        }
+        $rParts = explode('/', $routeTrim);
+        $pParts = explode('/', $reqTrim);
+        if (count($rParts) !== count($pParts)) {
+            return false;
+        }
+
+        $params = array();
+        $i = 0;
+        while ($i < count($rParts)) {
+            $r = $rParts[$i];
+            $p = $pParts[$i];
+            $len = strlen($r);
+            if ($len >= 2 && $r[0] === '{' && $r[$len - 1] === '}') {
+                if ($p === '') { return false; }
+                $params[] = $p;
+            } elseif ($r !== $p) {
+                return false;
+            }
+            $i++;
+        }
+        return $params;
     }
 
     function extractPath($uri)

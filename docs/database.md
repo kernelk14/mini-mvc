@@ -1,34 +1,76 @@
 ﻿# Database
 
-Minimal DB wrapper with a unified API and automatic driver selection.
+Minimal DB wrapper with a unified API and automatic runtime driver selection.
 
 ## Configuration (`config/database.php`)
+
 ```php
 return array(
     'driver' => 'auto', // auto | pdo | mysqli | mysql
     'type'   => 'mysql', // mysql | sqlite
-    'host' => 'localhost', 'port' => null,
-    'name' => 'app', 'user' => 'root', 'pass' => '', 'charset' => 'utf8',
-    'path' => BASE_PATH . '/storage/app/database.sqlite', // sqlite
+
+    // MySQL / MariaDB
+    'host' => 'localhost',
+    'port' => null,
+    'name' => 'app',
+    'user' => 'root',
+    'pass' => '',
+    'charset' => 'utf8',
+
+    // SQLite (when type = sqlite)
+    'path' => BASE_PATH . '/storage/app/database.sqlite',
 );
 ```
 
-## Driver selection (smart scan)
-- **MySQL/MariaDB:** PDO (`pdo_mysql`) → `mysqli` → legacy `mysql` (if available).
-- **SQLite:** PDO (`pdo_sqlite`).
+## Driver selection
 
-## Usage
+- **MySQL/MariaDB:** PDO (`pdo_mysql`) → `mysqli` → legacy `mysql` (if available)
+- **SQLite:** PDO (`pdo_sqlite`)
+- Chosen from runtime capabilities (`Compat_Version`), unless `driver` is forced.
+
+## Direct API
+
 ```php
-$db = new Core_Database(mini_config('database'));
-$res = $db->query('SELECT * FROM users WHERE id = ?', array($id));
-$row = $db->fetch($res);
-$rows = $db->fetchAll($res);
-```
-Models/controllers can use `Core_Model`/`$this->db()` which read from `config/database.php`.
+$db = db(); // or new Core_Database(config('database'))
 
-## API
-`connect/isConnected`, `query($sql,$params)`, `fetch/fetchAll`, `escape`, `lastInsertId`, `error`, `close`.
+$res  = $db->query('SELECT * FROM users WHERE id = ?', array($id));
+$row  = $db->fetch($res);
+$rows = $db->fetchAll($res);
+
+$ok   = $db->execute('DELETE FROM users WHERE id = ?', array($id));
+$newId = $db->lastInsertId();
+$err  = $db->error();
+```
+
+Methods: `connect/isConnected`, `query($sql,$params)`, `execute($sql,$params)`, `fetch/fetchAll`, `escape`, `lastInsertId`, `error`, `close`.
+
+## Models
+
+```php
+<?php
+class UserModel extends Core_Model
+{
+    var $table = 'users';
+}
+
+$m = model('User');
+
+$all  = $m->all(100);
+$one  = $m->find($id);
+$one  = $m->first('email = ?', array($email));
+$rows = $m->where('active = ?', array(1), 50);
+
+$id   = $m->create(array('name' => 'Ada', 'email' => 'ada@example.com'));
+$ok   = $m->updateById($id, array('name' => 'Ada L.'));
+$ok   = $m->deleteById($id);
+```
+
+Base helpers: `all($limit)`, `find($id)`, `first($whereSql,$params)`, `where($whereSql,$params,$limit)`, `create($data)`, `updateById($id,$data)`, `deleteById($id)`, `query($sql,$params)`.
+`create`/`updateById` accept simple column names (`A-Za-z0-9_`).
 
 ## Notes
-- Not an ORM; keep SQL explicit. PDO uses prepared statements when params are provided; mysqli/mysql paths interpolate escaped `?` params.
-- Legacy `mysql_*` is a fallback only where present (removed in PHP 7+). SQLite requires PDO sqlite.
+
+- Not an ORM; keep SQL explicit.
+- Always pass untrusted values as parameters, never concatenated into SQL.
+- PDO uses prepared statements when params are provided; mysqli/mysql paths interpolate escaped placeholders.
+- Legacy `mysql_*` is fallback-only where present (removed in PHP 7+).

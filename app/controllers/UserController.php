@@ -37,12 +37,13 @@ class UserController extends Core_Controller
         if (strlen($name) > 255) { $name = substr($name, 0, 255); }
 
         $m = model('User');
-        $ok = ($m && $m->db && $m->db->isConnected()) ? $m->create($name) : false;
+        $id = ($m && $m->db && $m->db->isConnected()) ? $m->create(array('name' => $name)) : false;
         $err = ($m && $m->db) ? $m->db->error() : 'Database not configured';
         return json(array(
-            'saved' => $ok ? true : false,
+            'saved' => $id ? true : false,
+            'id' => $id ? $id : null,
             'name' => $name,
-            'error' => $ok ? null : (mini_debug() ? $err : 'Unable to save'),
+            'error' => $id ? null : (mini_debug() ? $err : 'Unable to save'),
         ));
     }
 }

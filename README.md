@@ -8,9 +8,11 @@ Mini MVC is a small app skeleton + drop-in engine (`system/`) with a smart compa
 
 - **Wide compatibility** — single PHP 5.0-safe core (no namespaces, closures, short arrays, traits, or newer syntax requirements)
 - **Smart runtime scan** — `system/compat/Version.php` inspects capabilities and `Compat::boot()` wires polyfills, autoloading, and helpers
-- **Familiar MVC flow** — front controller, router, controllers, views, request/response
-- **Dedicated routes** — simple `get()/post()/put()/patch()/delete()/any()` definitions in `config/routes.php`
+- **Familiar MVC flow** — front controller, router, controllers, views, request/response, sessions
+- **Dedicated routes** — `get()/post()/...` in `config/routes.php` with exact and `{param}` segment routes
+- **Short app API** — helpers like `view()`, `json()`, `redirect()`, `input()`, `model()`, `session_*()`, `csrf_*()` on top of the core
 - **Minimal DB wrapper** — unified API with auto driver selection (PDO → mysqli → mysql for MySQL/MariaDB, PDO for SQLite)
+- **Model conveniences** — base helpers for `find`, `first`, `all`, `where`, `create`, `updateById`, `deleteById`, `query`
 - **Security baseline** — secure session cookies, CSRF helpers, output escaping, safe dispatch/view loading, security headers, debug-gated errors
 - **Reusable engine** — use the full skeleton or drop `system/` into an existing project
 
@@ -39,21 +41,29 @@ php -S localhost:8000
 <?php
 get('/', 'HomeController@index');
 get('/users', 'UserController@index');
-get('/users/show', 'UserController@show');
+get('/users/{id}', 'UserController@show');
 post('/users/save', 'UserController@save');
 ```
 
-**`app/controllers/HomeController.php`**
+**`app/controllers/UserController.php`**
 ```php
 <?php
-class HomeController extends Core_Controller
+class UserController extends Core_Controller
 {
-    function index()
+    function show($id)
     {
-        $this->view('home/index', array(
-            'title' => 'Home',
-            'message' => 'Welcome'
-        ));
+        $user = model('User')->find($id);
+        return view('user/show', array('user' => $user, 'id' => $id));
+    }
+
+    function save()
+    {
+        if (!is_post()) { return json(array('error' => 'Method not allowed'), 405); }
+        if (!csrf_valid()) { return json(array('error' => 'Invalid CSRF token'), 403); }
+
+        $name = trim((string)input('name', ''));
+        $id = model('User')->create(array('name' => $name));
+        return json(array('saved' => $id ? true : false, 'id' => $id));
     }
 }
 ```
@@ -74,8 +84,8 @@ config/                 Configuration and routes
 storage/                Runtime/storage data
   app/
 system/                 Reusable framework engine
-  compat/               Version scan, bootstrap, polyfills, autoload
-  core/                 App, Router, MVC base, DB, Request/Response
+  compat/               Version scan, bootstrap, polyfills, autoload, helpers
+  core/                 App, Router, MVC, DB, Request/Response, Session
 docs/                   Documentation
 ```
 
@@ -84,12 +94,12 @@ docs/                   Documentation
 Configure `config/database.php` (`driver => 'auto'` recommended). Supports **MySQL/MariaDB** and **SQLite** through a small unified wrapper:
 
 ```php
-$db = new Core_Database(mini_config('database'));
-$res = $db->query('SELECT * FROM users WHERE id = ?', array($id));
-$row = $db->fetch($res);
+$user = model('User')->find($id);
+$id = model('User')->create(array('name' => 'Ada'));
+$rows = db()->fetchAll(db()->query('SELECT * FROM users WHERE active = ?', array(1)));
 ```
 
-> See [docs/database.md](docs/database.md) for schema examples and driver behavior.
+> See [docs/database.md](docs/database.md) for driver behavior and model helpers.
 
 ## Security Notes
 

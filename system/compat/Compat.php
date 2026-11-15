@@ -332,6 +332,21 @@ function session_remove($key)
     return session()->remove($key);
 }
 
+function session_flash($key, $value)
+{
+    return session()->flash($key, $value);
+}
+
+function session_pull($key, $default = null)
+{
+    return session()->pull($key, $default);
+}
+
+function flash($key, $default = null)
+{
+    return session()->getFlash($key, $default);
+}
+
 function session_regen($deleteOld = true)
 {
     return session()->regenerate($deleteOld);

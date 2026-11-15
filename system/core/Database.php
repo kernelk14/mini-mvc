@@ -314,6 +314,12 @@ class Core_Database
         return null;
     }
 
+    function execute($sql, $params = null)
+    {
+        $res = $this->query($sql, $params);
+        return $res !== false;
+    }
+
     function error()
     {
         return $this->lastError;

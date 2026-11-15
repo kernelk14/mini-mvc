@@ -63,4 +63,27 @@ class Core_Request
     {
         return $this->method() === 'POST';
     }
+
+    function isGet()
+    {
+        return $this->method() === 'GET';
+    }
+
+    function has($key)
+    {
+        return array_key_exists($key, $_POST) || array_key_exists($key, $_GET);
+    }
+
+    function only($keys)
+    {
+        $out = array();
+        if (!is_array($keys)) { return $out; }
+        $i = 0;
+        while ($i < count($keys)) {
+            $k = $keys[$i];
+            if ($this->has($k)) { $out[$k] = $this->input($k, null); }
+            $i++;
+        }
+        return $out;
+    }
 }

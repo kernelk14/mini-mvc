@@ -39,9 +39,12 @@ class Core_Response
         exit;
     }
 
-    function json($data)
+    function json($data, $status = null)
     {
-        $this->header('Content-Type', 'application/json');
+        if ($status !== null) {
+            $this->status((int)$status);
+        }
+        $this->header('Content-Type', 'application/json; charset=utf-8');
         if (function_exists('mini_json_encode')) {
             echo mini_json_encode($data);
         } elseif (function_exists('json_encode')) {

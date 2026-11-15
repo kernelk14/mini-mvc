@@ -1,60 +1,92 @@
 ﻿# Controllers & Views
 
 ## Controllers
+
 Create controllers in `app/controllers/` extending `Core_Controller`:
+
 ```php
 <?php
 class UserController extends Core_Controller
 {
     function index()
     {
-        $this->view('user/index', array('title' => 'Users'));
+        $users = model('User')->all(100);
+        return view('user/index', array('title' => 'Users', 'users' => $users));
     }
 
-    function show()
+    function show($id)
     {
-        $id = $this->request->get('id', null);
-        $this->view('user/show', array('id' => $id));
+        $user = model('User')->find($id);
+        return view('user/show', array('user' => $user, 'id' => $id));
     }
 }
 ```
 
-### Base helpers
-- `$this->request` — `Core_Request` (method, uri, path, get/post/input/all, isPost).
-- `$this->response` — `Core_Response` (status, header, redirect, json).
-- `$this->session` — `Core_Session` (get, set, has, remove/forget, pull, all, clear, regenerate, destroy).
-- `$this->view($template, $data)` — render `app/views/$template.php`.
-- `$this->render($template, $data)` — render to string.
-- `$this->db()` — lazily get `Core_Database` from `config/database.php`.
-- `$this->redirect($url)`.
+Route `{param}` segments and segment-fallback params are passed to action arguments.
 
-## Sessions
-Sessions are started automatically during `Compat::boot()` with secure cookie settings. Use `$this->session` in controllers:
+## Base helpers (controller)
+
+- `$this->request` — `Core_Request` (`method`, `uri`, `path`, `get`, `post`, `input`, `all`, `only`, `has`, `isPost`, `isGet`)
+- `$this->response` — `Core_Response` (`status`, `header`, `redirect`, `json($data,$status)`)
+- `$this->session` — `Core_Session` (`get`, `set`, `has`, `remove/forget`, `pull`, `all`, `clear`, `regenerate`, `destroy`, `flash`, `getFlash`, `id`)
+- `$this->view($template, $data)` / `$this->render($template, $data)`
+- `$this->db()` — lazy `Core_Database`
+- `$this->redirect($url)`
+
+## Global shorthand helpers
+
+Available after boot (PHP 5.0-safe):
+
+- HTTP/views: `request()`, `response()`, `input()`, `is_post()`, `is_get()`, `view()`, `render()`, `redirect()`, `json()`, `abort()`
+- App: `config()`, `db()`, `model('User')` (or `model('UserModel')`)
+- Session: `session()`, `session_get/set/has/remove/pull/regen/destroy_safe`, `session_flash()`, `flash()`
+- Security/output: `csrf_token()`, `csrf_field()`, `csrf_valid()`, `e()`
+
 ```php
-// login
-$user = $model->findByCredentials($email, $password);
-if ($user) {
-    $this->session->regenerate(true);
-    $this->session->set('user_id', $user['id']);
-    $this->redirect('/dashboard');
-}
+if (!is_post()) { return json(array('error' => 'Method not allowed'), 405); }
+if (!csrf_valid()) { return json(array('error' => 'Invalid CSRF token'), 403); }
 
-// read/check
-$userId = $this->session->get('user_id');
-if (!$this->session->has('user_id')) { $this->redirect('/login'); }
-
-// logout
-$this->session->destroy();
-$this->redirect('/login');
+$name = trim((string)input('name', ''));
+$id = model('User')->create(array('name' => $name));
+return json(array('saved' => $id ? true : false, 'id' => $id));
 ```
 
 ## Views
-Plain PHP templates in `app/views/`. Escape all untrusted output with `Core_View::escape($value)` / `Core_View::e($value)` or `htmlspecialchars(...)`. View names are sanitized and confined to `app/views/`. No built-in layout engine; compose via includes/partials or rendered strings.
 
-## JSON
+Plain PHP templates in `app/views/`. Views receive extracted data plus auto-injected `csrf_token` and `csrf_field` when available.
+
 ```php
-$this->response->json(array('ok' => true));
+<h1><?php echo e($title); ?></h1>
+<form method="post" action="/users/save">
+  <?php echo $csrf_field; ?>
+  <input name="name" maxlength="255">
+</form>
 ```
 
-## CSRF for state-changing requests
-Use `mini_csrf_field()` in forms and verify in controllers with `mini_csrf_check($this->request->post('_csrf', ''))`. See `app/controllers/UserController.php` for an example.
+- Escape untrusted output with `e()` / `Core_View::escape()` / `htmlspecialchars`.
+- View names are sanitized and confined to `app/views/`.
+- No layout engine; compose via includes/partials or rendered strings.
+
+## Sessions
+
+Sessions start automatically during `Compat::boot()` with secure cookie settings.
+
+```php
+// login
+session_regen();
+session_set('user_id', $user['id']);
+redirect('/dashboard');
+
+// check / flash
+if (!session_has('user_id')) { redirect('/login'); }
+session_flash('notice', 'Saved');
+$msg = flash('notice'); // one-time read
+
+// logout
+session_destroy_safe();
+redirect('/login');
+```
+
+## CSRF
+
+Include `<?php echo $csrf_field; ?>` (or `csrf_field()`) in forms and verify with `csrf_valid()` in state-changing handlers.
