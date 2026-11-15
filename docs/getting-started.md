@@ -13,15 +13,15 @@ $app->run();
 Provide `config/*.php`, `config/routes.php`, and your `app/controllers|models|views` paths as used by this skeleton.
 
 ## 2. Web server
-Point document root to `public/`.
-- **Apache:** `public/.htaccess` rewrites non-file requests to `index.php`.
+Point document root to the project root (where `index.php` is).
+- **Apache:** root `.htaccess` rewrites non-file requests to `index.php`.
 - **Nginx (example):**
   ```nginx
-  root /path/to/project/public;
+  root /path/to/project;
   location / { try_files $uri $uri/ /index.php?$query_string; }
   location ~ \.php$ { include fastcgi_params; fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; fastcgi_pass 127.0.0.1:9000; }
   ```
-- **PHP built-in server:** `php -S localhost:8000 -t public`
+- **PHP built-in server:** `php -S localhost:8000`
 
 ## 3. Configure
 - `config/app.php` – app name, env, debug, base_url.

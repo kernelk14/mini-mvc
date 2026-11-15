@@ -10,8 +10,8 @@ This framework includes baseline hardening for a small PHP 5.0+ MVC core. You mu
 - **Dispatch safety:** controller/action names validated (allowlist pattern), actions must be public/callable on `Core_Controller` subclasses; internal/base methods are not routable.
 - **Safe 404s:** internal details shown only when `config/app.php` `debug` is true.
 - **Redirect safety:** response redirect blocks header injection and external/open redirects (relative URLs only).
-- **Security headers:** `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `X-XSS-Protection` (app + `public/.htaccess`).
-- **Directory hardening:** `.htaccess` deny rules for `config/`, `system/`, `storage/`; `Options -Indexes` in `public/`.
+- **Security headers:** `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `X-XSS-Protection` (app + root `.htaccess`).
+- **Directory hardening:** `.htaccess` deny rules for `config/`, `system/`, `storage/`; `Options -Indexes` in root `.htaccess`.
 - **Database:** parameterized `query($sql, $params)` API (PDO prepared statements when available; escaped interpolation for mysqli/mysql). Always pass user input as params, never concatenated SQL.
 - **Config loading:** `mini_config()` restricts names to `[A-Za-z0-9_-]+`.
 - **Error exposure:** display errors disabled by default; enable `debug => true` only in development.

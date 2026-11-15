@@ -21,7 +21,7 @@ Mini MVC is a small app skeleton + drop-in engine (`system/`) with a smart compa
 
 ## Quick Start
 
-1. **Point your document root to `public/`**
+1. **Point your web server document root to the project root** (where `index.php` lives)
 2. **Configure** `config/app.php` and (optional) `config/database.php`
 3. **Define routes** in `config/routes.php`
 4. **Add app code** in `app/controllers/`, `app/models/`, and `app/views/`
@@ -29,7 +29,7 @@ Mini MVC is a small app skeleton + drop-in engine (`system/`) with a smart compa
 Run locally with PHP's built-in server:
 
 ```bash
-php -S localhost:8000 -t public
+php -S localhost:8000
 ```
 
 ## Example
@@ -61,7 +61,8 @@ class HomeController extends Core_Controller
 ## Project Structure
 
 ```text
-public/                 Web root (front controller, .htaccess)
+index.php               Front controller
+.htaccess               Web server rewrites and headers
 app/                    Application code
   controllers/
   models/
