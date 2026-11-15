@@ -1,9 +1,9 @@
-# Security
+﻿# Security
 
 This framework includes baseline hardening for a small PHP 5.0+ MVC core. You must still follow secure coding practices in your app.
 
 ## Built-in measures
-- **Secure sessions (compat boot):** session started with HttpOnly cookies, SameSite=Lax, and `secure` flag when on HTTPS.
+- **Secure sessions (compat boot):** session started with HttpOnly cookies, SameSite=Lax, and `secure` flag when on HTTPS. Use `Core_Session`/`$this->session` (`get/set/has/remove/pull/regenerate/destroy`) for auth flows.
 - **CSRF helpers:** `mini_csrf_token()`, `mini_csrf_field()`, `mini_csrf_check($token)`; example POST flow in `UserController::save` and `app/views/user/index.php`.
 - **Output escaping:** `Core_View::escape()`/`Core_View::e()`; templates should escape all untrusted output (e.g. `htmlspecialchars`/`Core_View::e`).
 - **View path safety:** template names sanitized and confined to `app/views/` (blocks traversal).

@@ -18,13 +18,13 @@ class Core_Model
         $this->db = new Core_Database($cfg);
     }
 
-    function query($sql, $params)
+    function query($sql, $params = null)
     {
         if ($params === null) { $params = array(); }
         return $this->db->query($sql, $params);
     }
 
-    function all($limit)
+    function all($limit = null)
     {
         if ($this->table === '') { return array(); }
         $sql = 'SELECT * FROM ' . $this->table;
@@ -40,6 +40,15 @@ class Core_Model
         if ($this->table === '') { return null; }
         $sql = 'SELECT * FROM ' . $this->table . ' WHERE id = ? LIMIT 1';
         $res = $this->db->query($sql, array($id));
+        return $this->db->fetch($res);
+    }
+
+    function first($whereSql, $params = null)
+    {
+        if ($this->table === '' || $whereSql === null || $whereSql === '') { return null; }
+        if ($params === null) { $params = array(); }
+        $sql = 'SELECT * FROM ' . $this->table . ' WHERE ' . $whereSql . ' LIMIT 1';
+        $res = $this->db->query($sql, $params);
         return $this->db->fetch($res);
     }
 }

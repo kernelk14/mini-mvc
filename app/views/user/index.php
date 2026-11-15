@@ -45,7 +45,7 @@
 
     <h2>Add user (POST example)</h2>
     <form method="post" action="/users/save">
-        <?php if (function_exists('mini_csrf_field')) { echo mini_csrf_field(); } elseif (!empty($csrf)) { ?><input type="hidden" name="_csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES); ?>"><?php } ?>
+        <?php echo $csrf_field; ?>
         <input type="text" name="name" placeholder="Name" maxlength="255">
         <button type="submit">Save</button>
     </form>

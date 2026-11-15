@@ -183,3 +183,166 @@ function mini_random_token()
     }
     return md5($data);
 }
+
+/* App-facing helpers (short API, PHP 5.0-safe) */
+function request()
+{
+    if (!isset($GLOBALS['MINI_REQUEST'])) {
+        $GLOBALS['MINI_REQUEST'] = new Core_Request();
+    }
+    return $GLOBALS['MINI_REQUEST'];
+}
+
+function response()
+{
+    if (!isset($GLOBALS['MINI_RESPONSE'])) {
+        $GLOBALS['MINI_RESPONSE'] = new Core_Response();
+    }
+    return $GLOBALS['MINI_RESPONSE'];
+}
+
+function session()
+{
+    if (!isset($GLOBALS['MINI_SESSION'])) {
+        $GLOBALS['MINI_SESSION'] = new Core_Session();
+    }
+    return $GLOBALS['MINI_SESSION'];
+}
+
+function config($file, $default = null)
+{
+    $cfg = mini_config($file);
+    if ($default === null) { return $cfg; }
+    return is_array($cfg) && count($cfg) ? $cfg : $default;
+}
+
+function input($key, $default = null)
+{
+    return request()->input($key, $default);
+}
+
+function is_post()
+{
+    return request()->isPost();
+}
+
+function is_get()
+{
+    return request()->method() === 'GET';
+}
+
+function view($template, $data = null)
+{
+    if ($data === null) { $data = array(); }
+    return Core_View::render($template, $data, false);
+}
+
+function render($template, $data = null)
+{
+    if ($data === null) { $data = array(); }
+    return Core_View::render($template, $data, true);
+}
+
+function redirect($url, $code = null)
+{
+    response()->redirect($url, $code);
+}
+
+function json($data, $status = 200)
+{
+    response()->status($status);
+    response()->json($data);
+}
+
+function abort($code, $message = null)
+{
+    $code = (int)$code;
+    if ($message === null) { $message = ''; }
+    response()->status($code);
+    if ($code === 404) {
+        $app = new Core_App();
+        $app->notFound($message);
+    } else {
+        $debug = function_exists('mini_debug') ? mini_debug() : false;
+        $msg = ($debug && $message !== '') ? $message : 'Error';
+        echo '<h1>' . htmlspecialchars((string)$code, ENT_QUOTES) . '</h1><p>' . htmlspecialchars($msg, ENT_QUOTES) . '</p>';
+    }
+    exit;
+}
+
+function model($name)
+{
+    $class = $name;
+    if (substr($class, -5) !== 'Model') {
+        $class .= 'Model';
+    }
+    if (!class_exists($class)) {
+        $path = mini_base_path() . '/app/models/' . $class . '.php';
+        if (is_file($path)) { require_once $path; }
+    }
+    if (class_exists($class)) {
+        return new $class();
+    }
+    return null;
+}
+
+function db()
+{
+    if (!isset($GLOBALS['MINI_DB'])) {
+        $GLOBALS['MINI_DB'] = new Core_Database(mini_config('database'));
+    }
+    return $GLOBALS['MINI_DB'];
+}
+
+function csrf_token()
+{
+    return mini_csrf_token();
+}
+
+function csrf_field()
+{
+    return mini_csrf_field();
+}
+
+function csrf_valid($token = null)
+{
+    if ($token === null) {
+        $token = request()->post('_csrf', '');
+    }
+    return mini_csrf_check($token);
+}
+
+function session_set($key, $value)
+{
+    return session()->set($key, $value);
+}
+
+function session_get($key, $default = null)
+{
+    return session()->get($key, $default);
+}
+
+function session_has($key)
+{
+    return session()->has($key);
+}
+
+function session_remove($key)
+{
+    return session()->remove($key);
+}
+
+function session_regen($deleteOld = true)
+{
+    return session()->regenerate($deleteOld);
+}
+
+function session_destroy_safe()
+{
+    return session()->destroy();
+}
+
+function e($value)
+{
+    return Core_View::escape($value);
+}

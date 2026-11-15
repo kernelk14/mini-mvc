@@ -33,6 +33,12 @@ class Core_View
         if (!is_array($data)) {
             $data = array();
         }
+        if (!isset($data['csrf_token']) && function_exists('csrf_token')) {
+            $data['csrf_token'] = csrf_token();
+        }
+        if (!isset($data['csrf_field']) && function_exists('csrf_field')) {
+            $data['csrf_field'] = csrf_field();
+        }
 
         extract($data);
 

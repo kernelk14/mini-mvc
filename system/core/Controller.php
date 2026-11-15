@@ -6,6 +6,7 @@ class Core_Controller
 {
     var $request;
     var $response;
+    var $session;
     var $db;
     var $config;
 
@@ -18,6 +19,7 @@ class Core_Controller
     {
         $this->request = new Core_Request();
         $this->response = new Core_Response();
+        $this->session = new Core_Session();
         $this->config = array();
         $this->init();
     }
