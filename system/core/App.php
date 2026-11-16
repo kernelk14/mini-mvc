@@ -95,7 +95,7 @@ class Core_App
         return true;
     }
 
-    function notFound($message)
+    function notFound($message = null)
     {
         if ($message === null) { $message = ''; }
         if (function_exists('http_response_code')) {
