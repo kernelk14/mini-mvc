@@ -47,7 +47,38 @@ class Compat
         }
 
         Compat::startSecureSession();
+        Compat::detectBaseUrl();
         Compat::$booted = true;
+    }
+
+    static function detectBaseUrl()
+    {
+        $baseUrl = '';
+        $app = mini_config('app');
+        if (isset($app['base_url']) && $app['base_url'] !== '') {
+            $baseUrl = $app['base_url'];
+        } else {
+            $scriptName = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
+            $scriptName = str_replace('\\', '/', $scriptName);
+            $dir = dirname($scriptName);
+            $dir = str_replace('\\', '/', $dir);
+            if ($dir === '/' || $dir === '.' || $dir === '\\') {
+                $dir = '';
+            }
+            $baseUrl = $dir;
+        }
+        $baseUrl = str_replace('\\', '/', (string)$baseUrl);
+        if ($baseUrl !== '' && $baseUrl[0] !== '/') {
+            $baseUrl = '/' . $baseUrl;
+        }
+        $baseUrl = rtrim($baseUrl, '/');
+        $GLOBALS['MINI_BASE_URL'] = $baseUrl;
+        return $baseUrl;
+    }
+
+    static function baseUrl()
+    {
+        return isset($GLOBALS['MINI_BASE_URL']) ? $GLOBALS['MINI_BASE_URL'] : '';
     }
 
     static function startSecureSession()
@@ -107,6 +138,11 @@ function any($path, $handler) { Core_Router::add('ANY', $path, $handler); }
 function mini_base_path()
 {
     return isset($GLOBALS['MINI_BASE_PATH']) ? $GLOBALS['MINI_BASE_PATH'] : Compat::$basePath;
+}
+
+function mini_base_url()
+{
+    return isset($GLOBALS['MINI_BASE_URL']) ? $GLOBALS['MINI_BASE_URL'] : '';
 }
 
 function mini_config($file)
@@ -246,6 +282,22 @@ function render($template, $data = null)
 function redirect($url, $code = null)
 {
     response()->redirect($url, $code);
+}
+
+function url($path = '')
+{
+    $path = (string)$path;
+    $base = mini_base_url();
+    if ($path === '' || $path === '/') {
+        return $base === '' ? '/' : $base . '/';
+    }
+    if (preg_match('#^https?://#i', $path)) {
+        return $path;
+    }
+    if ($path[0] !== '/') {
+        $path = '/' . $path;
+    }
+    return $base . $path;
 }
 
 function json($data, $status = 200)

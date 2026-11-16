@@ -1,8 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # Uncomment and set if installed in a subfolder (e.g. XAMPP htdocs/mini-mvc)
+    # RewriteBase /mini-mvc/
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ index.php [L]
+    RewriteRule ^ index.php [L,QSA]
 </IfModule>
 
 Options -Indexes

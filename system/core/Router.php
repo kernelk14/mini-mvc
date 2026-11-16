@@ -126,8 +126,42 @@ class Core_Router
                 $path = substr($uri, 0, $qpos);
             }
         }
+
+        // Support subfolder installs (e.g. XAMPP htdocs/mini-mvc)
+        $base = '';
+        if (function_exists('mini_base_url')) {
+            $base = mini_base_url();
+        } elseif (isset($GLOBALS['MINI_BASE_URL'])) {
+            $base = $GLOBALS['MINI_BASE_URL'];
+        }
+        if ($base !== '' && $path !== '') {
+            $baseNorm = rtrim(str_replace('\\', '/', $base), '/');
+            $pathNorm = str_replace('\\', '/', $path);
+            $len = strlen($baseNorm);
+            if ($len > 0 && strncmp($pathNorm, $baseNorm, $len) === 0) {
+                $next = substr($pathNorm, $len);
+                if ($next === '' || $next === false || $next[0] === '/') {
+                    $path = $next === '' || $next === false ? '/' : $next;
+                }
+            }
+        }
+
+        // Fallbacks for servers without rewrite rules
+        if ($path === '/index.php' || $path === 'index.php') {
+            if (isset($_GET['url']) && $_GET['url'] !== '') {
+                $path = $_GET['url'];
+            } elseif (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] !== '') {
+                $path = $_SERVER['PATH_INFO'];
+            } else {
+                $path = '/';
+            }
+        }
+
         if ($path === '' || $path === null) {
             $path = '/';
+        }
+        if ($path[0] !== '/') {
+            $path = '/' . $path;
         }
         // normalize trailing slash (except root)
         if ($path !== '/' && substr($path, -1) === '/') {
