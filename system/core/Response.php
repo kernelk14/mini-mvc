@@ -34,6 +34,14 @@ class Core_Response
         if (preg_match('#^https?://#i', $url) || strpos($url, '//') === 0) {
             $url = '/';
         }
+        // Prefix base URL for subfolder installs (e.g. XAMPP)
+        if ($url !== '' && $url[0] === '/' && (strlen($url) < 2 || $url[1] !== '/')) {
+            $base = function_exists('mini_base_url') ? mini_base_url() : (isset($GLOBALS['MINI_BASE_URL']) ? $GLOBALS['MINI_BASE_URL'] : '');
+            $base = rtrim(str_replace('\\', '/', (string)$base), '/');
+            if ($base !== '' && strncmp($url, $base . '/', strlen($base) + 1) !== 0 && $url !== $base) {
+                $url = $base . $url;
+            }
+        }
         $this->status($code);
         $this->header('Location', $url);
         exit;

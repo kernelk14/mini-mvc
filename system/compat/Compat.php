@@ -288,14 +288,22 @@ function url($path = '')
 {
     $path = (string)$path;
     $base = mini_base_url();
+    $base = rtrim(str_replace('\\', '/', (string)$base), '/');
     if ($path === '' || $path === '/') {
         return $base === '' ? '/' : $base . '/';
     }
     if (preg_match('#^https?://#i', $path)) {
         return $path;
     }
+    if (strncmp($path, '//', 2) === 0) {
+        return $path;
+    }
     if ($path[0] !== '/') {
         $path = '/' . $path;
+    }
+    // avoid double-prefix if already includes base
+    if ($base !== '' && (strncmp($path, $base . '/', strlen($base) + 1) === 0 || $path === $base)) {
+        return $path;
     }
     return $base . $path;
 }

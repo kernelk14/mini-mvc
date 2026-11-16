@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -11,8 +11,8 @@
 </head>
 <body>
     <nav>
-        <a href="/">Home</a>
-        <a href="/users">Users</a>
+        <a href="<?php echo escape($base_url); ?>/">Home</a>
+        <a href="<?php echo escape($base_url); ?>/users">Users</a>
     </nav>
     <h1><?php echo htmlspecialchars($title); ?></h1>
     <p><?php echo htmlspecialchars($message); ?></p>
@@ -22,3 +22,4 @@
     </div>
 </body>
 </html>
+

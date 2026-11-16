@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -16,8 +16,8 @@
 <div class="container">
     <header>
         <nav>
-            <a href="/">Home</a>
-            <a href="/users">Users</a>
+            <a href="<?php echo escape($base_url); ?>/">Home</a>
+            <a href="<?php echo escape($base_url); ?>/users">Users</a>
         </nav>
     </header>
     <main>
@@ -26,3 +26,4 @@
 </div>
 </body>
 </html>
+

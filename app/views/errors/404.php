@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -8,6 +8,7 @@
 <body>
     <h1>404 Not Found</h1>
     <p><?php echo isset($error_message) ? htmlspecialchars($error_message) : 'The requested page could not be found.'; ?></p>
-    <p class="muted"><a href="/">Return home</a></p>
+    <p class="muted"><a href="<?php echo escape($base_url); ?>/">Return home</a></p>
 </body>
 </html>
+

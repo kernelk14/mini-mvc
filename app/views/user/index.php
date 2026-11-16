@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -14,8 +14,8 @@
 </head>
 <body>
     <nav>
-        <a href="/">Home</a>
-        <a href="/users">Users</a>
+        <a href="<?php echo escape($base_url); ?>/">Home</a>
+        <a href="<?php echo escape($base_url); ?>/users">Users</a>
     </nav>
     <h1><?php echo htmlspecialchars($title); ?></h1>
 
@@ -33,7 +33,7 @@
                     <td><?php echo isset($u['name']) ? htmlspecialchars($u['name']) : ''; ?></td>
                     <td>
                         <?php if (isset($u['id'])) { ?>
-                            <a href="/users/show?id=<?php echo urlencode($u['id']); ?>">View</a>
+                            <a href="<?php echo escape($base_url); ?>/users/show?id=<?php echo urlencode($u['id']); ?>">View</a>
                         <?php } ?>
                     </td>
                 </tr>
@@ -44,7 +44,7 @@
     <?php } ?>
 
     <h2>Add user (POST example)</h2>
-    <form method="post" action="/users/save">
+    <form method="post" action="<?php echo escape($base_url); ?>/users/save">
         <?php echo $csrf_field; ?>
         <input type="text" name="name" placeholder="Name" maxlength="255">
         <button type="submit">Save</button>
@@ -52,3 +52,4 @@
     <p class="muted">POST <code>/users/save</code> returns JSON and requires a valid CSRF token.</p>
 </body>
 </html>
+

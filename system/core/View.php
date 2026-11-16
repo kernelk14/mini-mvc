@@ -39,6 +39,9 @@ class Core_View
         if (!isset($data['csrf_field']) && function_exists('csrf_field')) {
             $data['csrf_field'] = csrf_field();
         }
+        if (!isset($data['base_url'])) {
+            $data['base_url'] = function_exists('mini_base_url') ? mini_base_url() : (isset($GLOBALS['MINI_BASE_URL']) ? $GLOBALS['MINI_BASE_URL'] : '');
+        }
 
         extract($data);
 
