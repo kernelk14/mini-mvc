@@ -40,7 +40,7 @@ Available after boot (PHP 5.0-safe):
 - HTTP/views: `request()`, `response()`, `input()`, `is_post()`, `is_get()`, `view()`, `render()`, `redirect()`, `json()`, `abort()`
 - App: `config()`, `db()`, `model('User')` (or `model('UserModel')`)
 - Session: `session()`, `session_get/set/has/remove/pull/regen/destroy_safe`, `session_flash()`, `flash()`
-- Security/output: `csrf_token()`, `csrf_field()`, `csrf_valid()`, `e()`
+- Security/output: `csrf_token()`, `csrf_field()`, `csrf_valid()`, `escape()`
 
 ```php
 if (!is_post()) { return json(array('error' => 'Method not allowed'), 405); }
@@ -56,14 +56,14 @@ return json(array('saved' => $id ? true : false, 'id' => $id));
 Plain PHP templates in `app/views/`. Views receive extracted data plus auto-injected `csrf_token` and `csrf_field` when available.
 
 ```php
-<h1><?php echo e($title); ?></h1>
+<h1><?php echo escape($title); ?></h1>
 <form method="post" action="/users/save">
   <?php echo $csrf_field; ?>
   <input name="name" maxlength="255">
 </form>
 ```
 
-- Escape untrusted output with `e()` / `Core_View::escape()` / `htmlspecialchars`.
+- Escape untrusted output with `escape()` / `Core_View::escape()` / `htmlspecialchars`.
 - View names are sanitized and confined to `app/views/`.
 - No layout engine; compose via includes/partials or rendered strings.
 
@@ -90,3 +90,4 @@ redirect('/login');
 ## CSRF
 
 Include `<?php echo $csrf_field; ?>` (or `csrf_field()`) in forms and verify with `csrf_valid()` in state-changing handlers.
+

@@ -357,7 +357,7 @@ function session_destroy_safe()
     return session()->destroy();
 }
 
-function e($value)
+function escape($value)
 {
     return Core_View::escape($value);
 }

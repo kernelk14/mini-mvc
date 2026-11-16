@@ -6,7 +6,7 @@ Baseline hardening for a small PHP 5.0+ MVC core. You must still follow secure c
 
 - **Secure sessions:** started at boot with HttpOnly cookies, SameSite=Lax, and the `secure` flag when on HTTPS. Use `Core_Session` / `$this->session` / `session_*` helpers (`get/set/has/remove/pull/regenerate/destroy/flash/getFlash`).
 - **CSRF:** `csrf_token()`, `csrf_field()`, `csrf_valid()` (`mini_csrf_*` aliases). Views auto-receive `csrf_token` and `csrf_field`. Example: `UserController::save` and `app/views/user/index.php`.
-- **Output escaping:** `e()` / `Core_View::escape()` for untrusted output in templates.
+- **Output escaping:** `escape()` / `Core_View::escape()` for untrusted output in templates.
 - **View path safety:** template names are sanitized and confined to `app/views/` (blocks traversal).
 - **Dispatch safety:** controller/action names are validated (allowlist), actions must be public/callable on `Core_Controller` subclasses; internal/base methods are not routable.
 - **Safe errors/404s:** internal details are shown only when `config/app.php` `debug` is true.

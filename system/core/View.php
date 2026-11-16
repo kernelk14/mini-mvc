@@ -67,9 +67,4 @@ class Core_View
         }
         return str_replace(array('&', '"', "'", '<', '>'), array('&amp;', '&quot;', '&#039;', '&lt;', '&gt;'), $value);
     }
-
-    static function e($value)
-    {
-        return Core_View::escape($value);
-    }
 }
