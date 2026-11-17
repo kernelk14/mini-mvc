@@ -7,13 +7,14 @@ class Core_Router
 {
     static $routes = array();
 
-    static function add($method, $path, $handler)
+    static function add($method, $path, $handler, $name = null)
     {
         $method = strtoupper($method);
         Core_Router::$routes[] = array(
-            'method' => $method,
-            'path'   => $path,
-            'handler'=> $handler,
+            'method'  => $method,
+            'path'    => $path,
+            'handler' => $handler,
+            'name'    => $name,
         );
     }
 
@@ -22,27 +23,61 @@ class Core_Router
         return Core_Router::$routes;
     }
 
-    function dispatch($method, $uri)
+    static function findByName($name)
     {
-        $method = strtoupper($method);
-        $path = $this->extractPath($uri);
         $i = 0;
         $count = count(Core_Router::$routes);
         while ($i < $count) {
             $r = Core_Router::$routes[$i];
-            $m = $r['method'];
-            if ($m === $method || $m === 'ANY') {
-                $params = $this->matchPath($r['path'], $path);
-                if ($params !== false) {
+            if (isset($r['name']) && $r['name'] === $name) {
+                return $r;
+            }
+            $i++;
+        }
+        return null;
+    }
+
+    function dispatch($method, $uri)
+    {
+        $method = strtoupper($method);
+        if ($method === 'HEAD') { $method = 'GET'; }
+        $path = $this->extractPath($uri);
+        $allowed = array();
+        $i = 0;
+        $count = count(Core_Router::$routes);
+        while ($i < $count) {
+            $r = Core_Router::$routes[$i];
+            $params = $this->matchPath($r['path'], $path);
+            if ($params !== false) {
+                $m = $r['method'];
+                if ($m === $method || $m === 'ANY') {
                     $parsed = $this->parseHandler($r['handler']);
                     return array(
                         'controller' => $parsed['controller'],
                         'action'     => $parsed['action'],
                         'params'     => $params,
+                        'status'     => 200,
                     );
+                }
+                if ($m === 'ANY') {
+                    $allowed = array('GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS');
+                } elseif (!in_array($m, $allowed)) {
+                    $allowed[] = $m;
                 }
             }
             $i++;
+        }
+
+        if (count($allowed) > 0) {
+            if (!in_array('OPTIONS', $allowed)) { $allowed[] = 'OPTIONS'; }
+            if (in_array('GET', $allowed) && !in_array('HEAD', $allowed)) { $allowed[] = 'HEAD'; }
+            return array(
+                'controller' => null,
+                'action'     => null,
+                'params'     => array(),
+                'status'     => 405,
+                'allowed'    => $allowed,
+            );
         }
 
         // Fallback: /Controller/action/param1/param2
@@ -65,6 +100,8 @@ class Core_Router
             'controller' => $controller,
             'action'     => $action,
             'params'     => $params,
+            'status'     => 200,
+            'fallback'   => true,
         );
     }
 

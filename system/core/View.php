@@ -42,6 +42,10 @@ class Core_View
         if (!isset($data['base_url'])) {
             $data['base_url'] = function_exists('mini_base_url') ? mini_base_url() : (isset($GLOBALS['MINI_BASE_URL']) ? $GLOBALS['MINI_BASE_URL'] : '');
         }
+        if (!isset($data['errors']) && function_exists('session')) {
+            $sess = session();
+            $data['errors'] = $sess ? $sess->get('_errors', array()) : array();
+        }
 
         extract($data);
 
@@ -55,6 +59,18 @@ class Core_View
 
         include $realFile;
         return true;
+    }
+
+    static function make($template, $data = null, $layout = null)
+    {
+        if ($data === null) { $data = array(); }
+        $content = Core_View::render($template, $data, true);
+        if ($layout === null) {
+            echo $content;
+            return true;
+        }
+        $data['content'] = $content;
+        return Core_View::render($layout, $data, false);
     }
 
     static function escape($value)

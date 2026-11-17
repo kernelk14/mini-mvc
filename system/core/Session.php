@@ -125,4 +125,44 @@ class Core_Session
     {
         return $this->pull('_flash_' . $key, $default);
     }
+
+    function setErrors($errors)
+    {
+        $this->set('_errors', is_array($errors) ? $errors : array($errors));
+    }
+
+    function errors()
+    {
+        $e = $this->get('_errors', array());
+        return is_array($e) ? $e : array();
+    }
+
+    function getError($key, $default = null)
+    {
+        $e = $this->errors();
+        if (is_array($key)) { $key = isset($key[0]) ? $key[0] : ''; }
+        return (is_array($e) && array_key_exists($key, $e)) ? $e[$key] : $default;
+    }
+
+    function clearErrors()
+    {
+        $this->remove('_errors');
+    }
+
+    function setOld($data)
+    {
+        $this->set('_old_input', is_array($data) ? $data : array());
+    }
+
+    function old($key, $default = null)
+    {
+        $old = $this->get('_old_input', array());
+        if (!is_array($old)) { return $default; }
+        return array_key_exists($key, $old) ? $old[$key] : $default;
+    }
+
+    function clearOld()
+    {
+        $this->remove('_old_input');
+    }
 }

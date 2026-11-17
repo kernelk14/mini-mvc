@@ -10,12 +10,15 @@ return array(
     'name' => 'Mini MVC',
     'env' => 'development',
     'debug' => true,
-    'base_url' => '',
+    'base_url' => '',      // empty = auto-detect (good for XAMPP/subfolders); or '/mini-mvc'
+    'csrf_protect' => false, // true = auto CSRF check on POST/PUT/PATCH/DELETE
     'timezone' => 'UTC',
 );
 ```
 
 - `debug`: controls error display and whether detailed internal errors are shown. Keep `false` in production.
+- `base_url`: auto-detected from script path when empty; set explicitly for subfolder installs. Used by `url()`/`route()` and auto-prefixed redirects.
+- `csrf_protect`: optional automatic CSRF enforcement for mutating methods (manual `csrf_valid()` still works).
 
 ## Database (`config/database.php`)
 

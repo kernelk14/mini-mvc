@@ -42,7 +42,15 @@ $newId = $db->lastInsertId();
 $err  = $db->error();
 ```
 
-Methods: `connect/isConnected`, `query($sql,$params)`, `execute($sql,$params)`, `fetch/fetchAll`, `escape`, `lastInsertId`, `error`, `close`.
+Methods: `connect/isConnected`, `query($sql,$params)`, `execute($sql,$params)`, `fetch/fetchAll`, `escape`, `lastInsertId`, `error`, `close`, and transactions: `beginTransaction()`, `commit()`, `rollBack()`, `transaction($callback)`.
+
+```php
+db()->transaction(function($db) {
+    $db->execute('UPDATE accounts SET balance = balance - ? WHERE id = ?', array(10, 1));
+    $db->execute('UPDATE accounts SET balance = balance + ? WHERE id = ?', array(10, 2));
+    return true; // return false to rollback
+});
+```
 
 ## Models
 

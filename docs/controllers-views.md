@@ -26,9 +26,9 @@ Route `{param}` segments and segment-fallback params are passed to action argume
 
 ## Base helpers (controller)
 
-- `$this->request` — `Core_Request` (`method`, `uri`, `path`, `get`, `post`, `input`, `all`, `only`, `has`, `isPost`, `isGet`)
-- `$this->response` — `Core_Response` (`status`, `header`, `redirect`, `json($data,$status)`)
-- `$this->session` — `Core_Session` (`get`, `set`, `has`, `remove/forget`, `pull`, `all`, `clear`, `regenerate`, `destroy`, `flash`, `getFlash`, `id`)
+- `$this->request` — `Core_Request` (`method`, `uri`, `path`, `get`, `post`, `input`, `all`, `only`, `except`, `has`, `isPost`, `isGet`, `cookie`, `file`, `hasFile`, `ip`, `header`)
+- `$this->response` — `Core_Response` (`status`, `header`, `redirect`, `json($data,$status)`, `cookie(...)`)
+- `$this->session` — `Core_Session` (`get`, `set`, `has`, `remove/forget`, `pull`, `all`, `clear`, `regenerate`, `destroy`, `flash`, `getFlash`, `id`, `setErrors/errors/getError/clearErrors`, `setOld/old/clearOld`)
 - `$this->view($template, $data)` / `$this->render($template, $data)`
 - `$this->db()` — lazy `Core_Database`
 - `$this->redirect($url)`
@@ -37,10 +37,12 @@ Route `{param}` segments and segment-fallback params are passed to action argume
 
 Available after boot (PHP 5.0-safe):
 
-- HTTP/views: `request()`, `response()`, `input()`, `is_post()`, `is_get()`, `view()`, `render()`, `redirect()`, `json()`, `abort()`
-- App: `config()`, `db()`, `model('User')` (or `model('UserModel')`)
-- Session: `session()`, `session_get/set/has/remove/pull/regen/destroy_safe`, `session_flash()`, `flash()`
-- Security/output: `csrf_token()`, `csrf_field()`, `csrf_valid()`, `escape()`
+- HTTP/views: `request()`, `response()`, `input()`, `is_post()`, `is_get()`, `view()`, `render()`, `redirect()`, `redirect_back()`, `back()`, `json()`, `abort()`, `url()`, `route()`
+- App: `config()`, `db()`, `model('User')` (or `model('UserModel')`), `logger($message,$level)`
+- Session/flash: `session()`, `session_get/set/has/remove/pull/regen/destroy_safe`, `session_flash()`, `flash()`
+- Forms/validation: `old()`, `errors()`, `with_input()`, `with_errors()`, `validate($data,$rules)`
+- Security/auth: `csrf_token()`, `csrf_field()`, `csrf_valid()`, `escape()`, `hash_password()`, `verify_password()`, `auth_check()`, `auth_id()`, `auth_user($model)`
+- Layout helper: `Core_View::make($template, $data, $layout)` renders a view into `$content` then the layout
 
 ```php
 if (!is_post()) { return json(array('error' => 'Method not allowed'), 405); }
@@ -87,7 +89,20 @@ session_destroy_safe();
 redirect('/login');
 ```
 
+## Validation & old input
+
+```php
+$data = array('email' => input('email'), 'name' => input('name'));
+$errs = validate($data, array('email' => 'required|email', 'name' => 'required|min:2|max:100'));
+if (count($errs)) { with_errors($errs); with_input($data); return redirect_back('/form'); }
+
+echo old('email');          // repopulate input
+echo errors('email');       // field error
+```
+
+Views also receive `$errors` (from session) and can use `route('name', array($id))` / `url('/path')` for links.
+
 ## CSRF
 
-Include `<?php echo $csrf_field; ?>` (or `csrf_field()`) in forms and verify with `csrf_valid()` in state-changing handlers.
+Include `<?php echo $csrf_field; ?>` (or `csrf_field()`) in forms and verify with `csrf_valid()` in state-changing handlers. You can also set `config/app.php` `csrf_protect => true` to enforce CSRF automatically for POST/PUT/PATCH/DELETE (manual checks still fine).
 

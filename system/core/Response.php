@@ -61,4 +61,25 @@ class Core_Response
             echo 'null';
         }
     }
+
+    function cookie($name, $value, $expire = 0, $path = '/', $domain = '', $secure = null, $httponly = true)
+    {
+        if ($secure === null) {
+            $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        }
+        if (function_exists('setcookie')) {
+            if (defined('PHP_VERSION_ID') ? PHP_VERSION_ID >= 70300 : (class_exists('Compat_Version') && Compat::$version && Compat::$version->atLeast(7,3,0))) {
+                @setcookie($name, $value, array(
+                    'expires' => $expire,
+                    'path' => $path,
+                    'domain' => $domain,
+                    'secure' => $secure,
+                    'httponly' => $httponly,
+                    'samesite' => 'Lax',
+                ));
+            } else {
+                @setcookie($name, $value, $expire, $path, $domain, $secure, $httponly);
+            }
+        }
+    }
 }

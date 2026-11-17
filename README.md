@@ -9,8 +9,8 @@ Mini MVC is a small app skeleton + drop-in engine (`system/`) with a smart compa
 - **Wide compatibility** — single PHP 5.0-safe core (no namespaces, closures, short arrays, traits, or newer syntax requirements)
 - **Smart runtime scan** — `system/compat/Version.php` inspects capabilities and `Compat::boot()` wires polyfills, autoloading, and helpers
 - **Familiar MVC flow** — front controller, router, controllers, views, request/response, sessions
-- **Dedicated routes** — `get()/post()/...` in `config/routes.php` with exact and `{param}` segment routes
-- **Short app API** — helpers like `view()`, `json()`, `redirect()`, `input()`, `model()`, `session_*()`, `csrf_*()` on top of the core
+- **Dedicated routes** — `get()/post()/...` in `config/routes.php` with exact/`{param}` routes, named routes, and 405 handling
+- **Short app API** — helpers for views/JSON/redirects/input/models/sessions/CSRF, plus `url()/route()`, validation, flash/old/errors, auth and logging
 - **Minimal DB wrapper** — unified API with auto driver selection (PDO → mysqli → mysql for MySQL/MariaDB, PDO for SQLite)
 - **Model conveniences** — base helpers for `find`, `first`, `all`, `where`, `create`, `updateById`, `deleteById`, `query`
 - **Security baseline** — secure session cookies, CSRF helpers, output escaping, safe dispatch/view loading, security headers, debug-gated errors
@@ -121,3 +121,4 @@ $rows = db()->fetchAll(db()->query('SELECT * FROM users WHERE active = ?', array
 ## License
 
 [MIT](LICENSE)
+

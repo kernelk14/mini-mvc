@@ -15,3 +15,6 @@ storage/app/*.db
 config/*.local.php
 .env
 
+
+storage/logs/*.log
+storage/logs/app.log

@@ -320,6 +320,50 @@ class Core_Database
         return $res !== false;
     }
 
+    function beginTransaction()
+    {
+        if ($this->driver === 'pdo' && $this->pdo && method_exists($this->pdo, 'beginTransaction')) {
+            return $this->pdo->beginTransaction();
+        }
+        if ($this->driver === 'mysqli' && $this->conn) {
+            if (function_exists('mysqli_begin_transaction')) { return @mysqli_begin_transaction($this->conn); }
+            return @mysqli_query($this->conn, 'START TRANSACTION');
+        }
+        if ($this->driver === 'mysql' && $this->conn) {
+            return @mysql_query('START TRANSACTION', $this->conn);
+        }
+        return false;
+    }
+
+    function commit()
+    {
+        if ($this->driver === 'pdo' && $this->pdo) { return $this->pdo->commit(); }
+        if ($this->driver === 'mysqli' && $this->conn) { return @mysqli_commit($this->conn); }
+        if ($this->driver === 'mysql' && $this->conn) { return @mysql_query('COMMIT', $this->conn); }
+        return false;
+    }
+
+    function rollBack()
+    {
+        if ($this->driver === 'pdo' && $this->pdo) { return $this->pdo->rollBack(); }
+        if ($this->driver === 'mysqli' && $this->conn) { return @mysqli_rollback($this->conn); }
+        if ($this->driver === 'mysql' && $this->conn) { return @mysql_query('ROLLBACK', $this->conn); }
+        return false;
+    }
+
+    function transaction($callback)
+    {
+        if (!is_callable($callback)) { return false; }
+        $this->beginTransaction();
+        $result = call_user_func($callback, $this);
+        if ($result === false) {
+            $this->rollBack();
+            return false;
+        }
+        $this->commit();
+        return $result === null ? true : $result;
+    }
+
     function error()
     {
         return $this->lastError;

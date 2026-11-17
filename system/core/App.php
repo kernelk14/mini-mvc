@@ -27,7 +27,7 @@ class Core_App
         $uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
 
         $route = $this->router->dispatch($method, $uri);
-        $this->dispatchRoute($route);
+        $this->dispatchRoute($route, $method);
     }
 
     function sendSecurityHeaders()
@@ -47,8 +47,20 @@ class Core_App
         }
     }
 
-    function dispatchRoute($route)
+    function dispatchRoute($route, $method = null)
     {
+        if ($method === null) {
+            $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
+        }
+        $method = strtoupper($method);
+
+        $status = isset($route['status']) ? (int)$route['status'] : 200;
+        if ($status === 405) {
+            $allowed = isset($route['allowed']) && is_array($route['allowed']) ? $route['allowed'] : array();
+            $this->methodNotAllowed($allowed);
+            return;
+        }
+
         $controllerName = isset($route['controller']) ? $route['controller'] : 'HomeController';
         $action = isset($route['action']) ? $route['action'] : 'index';
         $params = isset($route['params']) && is_array($route['params']) ? $route['params'] : array();
@@ -64,7 +76,51 @@ class Core_App
             return;
         }
 
+        // Automatic CSRF for mutating requests when enabled
+        if (isset($this->config['csrf_protect']) && $this->config['csrf_protect']) {
+            $mutating = array('POST','PUT','PATCH','DELETE');
+            if (in_array($method, $mutating)) {
+                $token = isset($_POST['_csrf']) ? $_POST['_csrf'] : null;
+                if (function_exists('csrf_valid') && !csrf_valid($token)) {
+                    $this->forbidden('Invalid CSRF token');
+                    return;
+                }
+            }
+        }
+
+        if ($method === 'HEAD') {
+            ob_start();
+            call_user_func_array(array($controller, $action), $params);
+            ob_end_clean();
+            return;
+        }
+
         call_user_func_array(array($controller, $action), $params);
+    }
+
+    function methodNotAllowed($allowed)
+    {
+        if (function_exists('http_response_code')) {
+            http_response_code(405);
+        } else {
+            header('HTTP/1.1 405 Method Not Allowed');
+        }
+        if (is_array($allowed) && count($allowed) > 0) {
+            header('Allow: ' . implode(', ', $allowed));
+        }
+        echo '<h1>405 Method Not Allowed</h1>';
+    }
+
+    function forbidden($message)
+    {
+        if (function_exists('http_response_code')) {
+            http_response_code(403);
+        } else {
+            header('HTTP/1.1 403 Forbidden');
+        }
+        $debug = function_exists('mini_debug') ? mini_debug() : false;
+        $msg = ($debug && $message) ? $message : 'Forbidden';
+        echo '<h1>403 Forbidden</h1><p>' . htmlspecialchars($msg, ENT_QUOTES) . '</p>';
     }
 
     function isValidController($name)

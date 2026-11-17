@@ -128,12 +128,12 @@ class Compat
 }
 
 /* Route helper functions (available after compat is loaded) */
-function get($path, $handler) { Core_Router::add('GET', $path, $handler); }
-function post($path, $handler) { Core_Router::add('POST', $path, $handler); }
-function put($path, $handler) { Core_Router::add('PUT', $path, $handler); }
-function patch($path, $handler) { Core_Router::add('PATCH', $path, $handler); }
-function delete($path, $handler) { Core_Router::add('DELETE', $path, $handler); }
-function any($path, $handler) { Core_Router::add('ANY', $path, $handler); }
+function get($path, $handler, $name = null) { Core_Router::add('GET', $path, $handler, $name); }
+function post($path, $handler, $name = null) { Core_Router::add('POST', $path, $handler, $name); }
+function put($path, $handler, $name = null) { Core_Router::add('PUT', $path, $handler, $name); }
+function patch($path, $handler, $name = null) { Core_Router::add('PATCH', $path, $handler, $name); }
+function delete($path, $handler, $name = null) { Core_Router::add('DELETE', $path, $handler, $name); }
+function any($path, $handler, $name = null) { Core_Router::add('ANY', $path, $handler, $name); }
 
 function mini_base_path()
 {
@@ -284,6 +284,12 @@ function redirect($url, $code = null)
     response()->redirect($url, $code);
 }
 
+function back($fallback = '/')
+{
+    $ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : $fallback;
+    redirect($ref);
+}
+
 function url($path = '')
 {
     $path = (string)$path;
@@ -306,6 +312,22 @@ function url($path = '')
         return $path;
     }
     return $base . $path;
+}
+
+function route($name, $params = null)
+{
+    $r = Core_Router::findByName($name);
+    if (!$r || !isset($r['path'])) { return url('/'); }
+    $path = $r['path'];
+    if (is_array($params) && count($params) > 0) {
+        // replace {param} placeholders in order
+        $i = 0;
+        while (strpos($path, '{') !== false && $i < count($params)) {
+            $path = preg_replace('/\{[^}]+\}/', $params[$i], $path, 1);
+            $i++;
+        }
+    }
+    return url($path);
 }
 
 function json($data, $status = 200)
@@ -415,6 +437,126 @@ function session_regen($deleteOld = true)
 function session_destroy_safe()
 {
     return session()->destroy();
+}
+
+function old($key, $default = null)
+{
+    $s = session();
+    return $s ? $s->old($key, $default) : $default;
+}
+
+function errors($key = null)
+{
+    $s = session();
+    if (!$s) { return $key === null ? array() : null; }
+    if ($key === null) { return $s->errors(); }
+    return $s->getError($key, null);
+}
+
+function with_input($data = null)
+{
+    $s = session();
+    if ($s) { $s->setOld($data === null ? request()->all() : $data); }
+}
+
+function with_errors($errs)
+{
+    $s = session();
+    if ($s) { $s->setErrors($errs); }
+}
+
+function redirect_back($fallback = '/')
+{
+    with_input();
+    back($fallback);
+}
+
+function hash_password($password)
+{
+    if (function_exists('password_hash')) {
+        return password_hash($password, PASSWORD_DEFAULT);
+    }
+    if (function_exists('crypt')) {
+        $salt = '$2y$10$' . substr(str_replace('+', '.', base64_encode(sha1(uniqid(mt_rand(), true), true))), 0, 22);
+        return crypt($password, $salt);
+    }
+    return sha1($password);
+}
+
+function verify_password($password, $hash)
+{
+    if (function_exists('password_verify')) {
+        return password_verify($password, $hash);
+    }
+    if (function_exists('crypt')) {
+        return crypt($password, $hash) === $hash;
+    }
+    return sha1($password) === $hash;
+}
+
+function auth_check()
+{
+    return session_has('user_id');
+}
+
+function auth_id()
+{
+    return session_get('user_id', null);
+}
+
+function auth_user($modelName)
+{
+    if (!$modelName) { $modelName = 'User'; }
+    if (!auth_check()) { return null; }
+    $m = model($modelName);
+    if (!$m || !$m->ready()) { return null; }
+    return $m->find(auth_id());
+}
+
+function logger($message, $level = 'info')
+{
+    $dir = mini_base_path() . '/storage/logs';
+    if (!is_dir($dir)) { @mkdir($dir, 0777, true); }
+    $file = $dir . '/app.log';
+    $line = '[' . date('Y-m-d H:i:s') . '] ' . strtoupper($level) . ': ' . $message . "\n";
+    @file_put_contents($file, $line, FILE_APPEND);
+}
+
+function validate($data, $rules)
+{
+    $errors = array();
+    foreach ($rules as $field => $ruleStr) {
+        $value = (is_array($data) && array_key_exists($field, $data)) ? $data[$field] : null;
+        $ruleList = is_array($ruleStr) ? $ruleStr : explode('|', $ruleStr);
+        $i = 0;
+        while ($i < count($ruleList)) {
+            $rule = $ruleList[$i];
+            $param = null;
+            if (strpos($rule, ':') !== false) {
+                $parts = explode(':', $rule, 2);
+                $rule = $parts[0];
+                $param = $parts[1];
+            }
+            $r = trim($rule);
+            if ($r === 'required' && ($value === null || $value === '' || (is_array($value) && count($value) === 0))) {
+                $errors[$field] = $field . ' is required';
+            } elseif ($r === 'email' && $value !== null && $value !== '' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                $errors[$field] = $field . ' must be a valid email';
+            } elseif ($r === 'min' && $value !== null && $value !== '' && strlen((string)$value) < (int)$param) {
+                $errors[$field] = $field . ' must be at least ' . $param . ' characters';
+            } elseif ($r === 'max' && $value !== null && $value !== '' && strlen((string)$value) > (int)$param) {
+                $errors[$field] = $field . ' must be at most ' . $param . ' characters';
+            } elseif ($r === 'numeric' && $value !== null && $value !== '' && !is_numeric($value)) {
+                $errors[$field] = $field . ' must be numeric';
+            } elseif ($r === 'confirmed') {
+                $conf = (is_array($data) && array_key_exists($field . '_confirmation', $data)) ? $data[$field . '_confirmation'] : null;
+                if ($value !== $conf) { $errors[$field] = $field . ' confirmation does not match'; }
+            }
+            if (isset($errors[$field])) { break; }
+            $i++;
+        }
+    }
+    return $errors; // empty array = valid
 }
 
 function escape($value)
