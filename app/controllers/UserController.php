@@ -4,8 +4,8 @@ class UserController extends Core_Controller
     function index()
     {
         $m = model('User');
-        $users = ($m && $m->db && $m->db->isConnected()) ? $m->all(100) : array();
-        $err = ($m && $m->db) ? $m->db->error() : 'Database not configured';
+        $users = ($m && $m->ready()) ? $m->all(100) : array();
+        $err = $m ? $m->dbError() : 'Database not configured';
         return view('user/index', array(
             'title' => 'Users',
             'users' => $users,
@@ -17,8 +17,8 @@ class UserController extends Core_Controller
     {
         $id = input('id');
         $m = model('User');
-        $user = ($m && $m->db && $m->db->isConnected() && $id !== null) ? $m->find($id) : null;
-        $err = ($m && $m->db) ? $m->db->error() : 'Database not configured';
+        $user = ($m && $m->ready() && $id !== null) ? $m->find($id) : null;
+        $err = $m ? $m->dbError() : 'Database not configured';
         return view('user/show', array(
             'title' => 'User',
             'user' => $user,
@@ -37,8 +37,8 @@ class UserController extends Core_Controller
         if (strlen($name) > 255) { $name = substr($name, 0, 255); }
 
         $m = model('User');
-        $id = ($m && $m->db && $m->db->isConnected()) ? $m->create(array('name' => $name)) : false;
-        $err = ($m && $m->db) ? $m->db->error() : 'Database not configured';
+        $id = ($m && $m->ready()) ? $m->create(array('name' => $name)) : false;
+        $err = $m ? $m->dbError() : 'Database not configured';
         return json(array(
             'saved' => $id ? true : false,
             'id' => $id ? $id : null,

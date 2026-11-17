@@ -18,6 +18,16 @@ class Core_Model
         $this->db = new Core_Database($cfg);
     }
 
+    function ready()
+    {
+        return $this->db && $this->db->isConnected();
+    }
+
+    function dbError()
+    {
+        return $this->db ? $this->db->error() : 'Database not configured';
+    }
+
     function query($sql, $params = null)
     {
         if ($params === null) { $params = array(); }
