@@ -18,3 +18,7 @@ config/*.local.php
 
 storage/logs/*.log
 storage/logs/app.log
+
+# Updater artifacts
+*.upstream
+*.local-backup

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "generated": "2026-11-18T00:12:10+01:00",
+  "managed": ["system"],
+  "files": {
+    "system/.htaccess": "15f54d49b4799d98e7643aea25b499ab",
+    "system/compat/Compat.php": "789cf29c4f3cf346f5c7195e849b25a7",
+    "system/compat/Version.php": "ea92844a7bc75bbd28c5c8a7072a9998",
+    "system/compat/autoload.php": "2eb8391474bee05f2e4c501a375f84a5",
+    "system/compat/polyfills.php": "bf86f5923a07d640ffd5fff0801e70fb",
+    "system/core/App.php": "5314a4a8a3e27c0409714781f15caaa0",
+    "system/core/Controller.php": "d5ef0ac2a7dbd3b6b8747c5f27cc9f71",
+    "system/core/Database.php": "1191339bf41311983f4c3ff7fc942609",
+    "system/core/Loader.php": "ce3795815bb48ad20b9eb0594ac0d70a",
+    "system/core/Model.php": "ad87e23ee7fb53c147c486cb0c64b1d7",
+    "system/core/Request.php": "df7bb68b2cbb9686b0fd4254b89211a2",
+    "system/core/Response.php": "12b3f5a293087bae787ea0fcd89b6d5d",
+    "system/core/Router.php": "659808cc70447a5fd88058ac0a9f3243",
+    "system/core/Session.php": "16ad01031485c8ee6b599fe41165795e",
+    "system/core/View.php": "217204d7a444200ae3a6ed0f012e5af5"
+  }
+}
