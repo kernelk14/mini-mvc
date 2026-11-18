@@ -89,7 +89,8 @@ class Core_Session
 
             if (function_exists('setcookie')) {
                 if (defined('PHP_VERSION_ID') ? PHP_VERSION_ID >= 70300 : (class_exists('Compat_Version') ? Compat::$version->atLeast(7,3,0) : false)) {
-                    @setcookie($name, '', time() - 42000, array(
+                    @setcookie($name, '', array(
+                        'expires' => time() - 42000,
                         'path' => $path,
                         'domain' => $domain,
                         'secure' => $secure,
