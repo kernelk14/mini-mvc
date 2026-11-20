@@ -1,11 +1,13 @@
 <?php
 /**
- * Minimal base model.
+ * Minimal base model with fluent query builder support.
+ * Legacy array/SQL APIs preserved for BC.
  */
 class Core_Model
 {
     var $db;
     var $table = '';
+    var $primaryKey = 'id';
 
     function __construct()
     {
@@ -28,89 +30,80 @@ class Core_Model
         return $this->db ? $this->db->error() : 'Database not configured';
     }
 
-    function query($sql, $params = null)
+    /**
+     * Raw SQL query (BC): query($sql, $params)
+     * Fluent builder: query() with no args returns Core_Query.
+     */
+    function query($sql = null, $params = null)
     {
+        if ($sql === null) {
+            return $this->newQuery();
+        }
         if ($params === null) { $params = array(); }
         return $this->db->query($sql, $params);
     }
 
+    function newQuery()
+    {
+        return new Core_Query($this->db, $this->table, $this->primaryKey, $this);
+    }
+
+    function builder() { return $this->newQuery(); }
+
     function all($limit = null)
     {
         if ($this->table === '') { return array(); }
-        $sql = 'SELECT * FROM ' . $this->table;
-        if ($limit !== null && (int)$limit > 0) {
-            $sql .= ' LIMIT ' . (int)$limit;
-        }
-        $res = $this->db->query($sql, array());
-        return $this->db->fetchAll($res);
+        $q = $this->newQuery();
+        if ($limit !== null && (int)$limit > 0) { $q->limit((int)$limit); }
+        return $q->get();
     }
 
     function find($id)
     {
-        if ($this->table === '') { return null; }
-        $sql = 'SELECT * FROM ' . $this->table . ' WHERE id = ? LIMIT 1';
-        $res = $this->db->query($sql, array($id));
-        return $this->db->fetch($res);
+        if ($this->table === '' || $id === null) { return null; }
+        return $this->newQuery()->where($this->primaryKey, $id)->first();
     }
 
-    function first($whereSql, $params = null)
+    /**
+     * BC: first($whereSql, $params) - raw WHERE string, executes immediately.
+     * Builder: first() with no args after chained where() not possible on model directly;
+     *          use query()->...->first(). This keeps legacy signature intact.
+     */
+    function first($whereSql = null, $params = null)
     {
         if ($this->table === '' || $whereSql === null || $whereSql === '') { return null; }
         if ($params === null) { $params = array(); }
-        $sql = 'SELECT * FROM ' . $this->table . ' WHERE ' . $whereSql . ' LIMIT 1';
-        $res = $this->db->query($sql, $params);
-        return $this->db->fetch($res);
+        return $this->newQuery()->whereRaw($whereSql, $params)->first();
     }
 
     function create($data)
     {
         if ($this->table === '' || !is_array($data) || count($data) === 0) { return false; }
-        $cols = array();
-        $marks = array();
-        $vals = array();
-        foreach ($data as $k => $v) {
-            if (!preg_match('/^[A-Za-z0-9_]+$/', $k)) { continue; }
-            $cols[] = $k;
-            $marks[] = '?';
-            $vals[] = $v;
-        }
-        if (count($cols) === 0) { return false; }
-        $sql = 'INSERT INTO ' . $this->table . ' (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $marks) . ')';
-        $res = $this->db->query($sql, $vals);
-        if ($res === false) { return false; }
-        return $this->db->lastInsertId();
+        return $this->newQuery()->insert($data);
     }
 
     function updateById($id, $data)
     {
         if ($this->table === '' || !is_array($data) || count($data) === 0) { return false; }
-        $sets = array();
-        $vals = array();
-        foreach ($data as $k => $v) {
-            if (!preg_match('/^[A-Za-z0-9_]+$/', $k)) { continue; }
-            $sets[] = $k . ' = ?';
-            $vals[] = $v;
-        }
-        if (count($sets) === 0) { return false; }
-        $vals[] = $id;
-        $sql = 'UPDATE ' . $this->table . ' SET ' . implode(', ', $sets) . ' WHERE id = ?';
-        return $this->db->execute($sql, $vals);
+        return $this->newQuery()->where($this->primaryKey, $id)->update($data);
     }
 
     function deleteById($id)
     {
         if ($this->table === '') { return false; }
-        $sql = 'DELETE FROM ' . $this->table . ' WHERE id = ?';
-        return $this->db->execute($sql, array($id));
+        return $this->newQuery()->where($this->primaryKey, $id)->delete();
     }
 
+    /**
+     * BC: where($whereSql, $params, $limit) - raw WHERE, executes and returns array.
+     * For fluent builder use query()->where($col,$val)->get().
+     */
     function where($whereSql, $params = null, $limit = null)
     {
         if ($this->table === '' || $whereSql === null || $whereSql === '') { return array(); }
         if ($params === null) { $params = array(); }
-        $sql = 'SELECT * FROM ' . $this->table . ' WHERE ' . $whereSql;
-        if ($limit !== null && (int)$limit > 0) { $sql .= ' LIMIT ' . (int)$limit; }
-        $res = $this->db->query($sql, $params);
-        return $this->db->fetchAll($res);
+        $q = $this->newQuery()->whereRaw($whereSql, $params);
+        if ($limit !== null && (int)$limit > 0) { $q->limit((int)$limit); }
+        return $q->get();
     }
 }

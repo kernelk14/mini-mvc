@@ -59,22 +59,52 @@ db()->transaction(function($db) {
 class UserModel extends Core_Model
 {
     var $table = 'users';
+    // var $primaryKey = 'id'; // default
 }
 
 $m = model('User');
 
 $all  = $m->all(100);
 $one  = $m->find($id);
-$one  = $m->first('email = ?', array($email));
-$rows = $m->where('active = ?', array(1), 50);
+$one  = $m->first('email = ?', array($email));          // legacy raw WHERE
+$rows = $m->where('active = ?', array(1), 50);          // legacy raw WHERE, returns array
 
 $id   = $m->create(array('name' => 'Ada', 'email' => 'ada@example.com'));
 $ok   = $m->updateById($id, array('name' => 'Ada L.'));
 $ok   = $m->deleteById($id);
 ```
 
-Base helpers: `all($limit)`, `find($id)`, `first($whereSql,$params)`, `where($whereSql,$params,$limit)`, `create($data)`, `updateById($id,$data)`, `deleteById($id)`, `query($sql,$params)`.
-`create`/`updateById` accept simple column names (`A-Za-z0-9_`).
+Base helpers (BC): `all($limit)`, `find($id)`, `first($whereSql,$params)`, `where($whereSql,$params,$limit)`, `create($data)`, `updateById($id,$data)`, `deleteById($id)`, `query($sql,$params)`. `create`/`update*` accept simple column names (`A-Za-z0-9_`).
+
+## Query builder (fluent)
+
+`$m->query()` / `$m->newQuery()` returns a chainable `Core_Query` (parameterized, returns arrays). The legacy `where/first` methods above execute immediately and keep their raw-SQL signatures for compatibility.
+
+```php
+$m = model('User');
+
+$user  = $m->query()->where('email', $email)->first();
+$users = $m->query()->where('active', 1)
+                   ->where('age', '>=', 18)
+                   ->orderBy('created_at', 'desc')
+                   ->limit(10)->get();
+
+$users = $m->query()->where(array('active' => 1, 'role' => 'admin'))->get();
+$users = $m->query()->whereIn('role', array('admin', 'editor'))->get();
+$users = $m->query()->whereNull('deleted_at')->get();
+$users = $m->query()->whereRaw('YEAR(created_at) = ?', array(2026))->get();
+
+$n  = $m->query()->where('active', 1)->count();
+$ok = $m->query()->where('email', $email)->exists();
+$val  = $m->query()->where('id', 1)->value('email');
+$names = $m->query()->where('active', 1)->pluck('name');
+
+$id = $m->query()->insert(array('name' => 'Ada'));
+$ok = $m->query()->where('id', $id)->update(array('name' => 'Ada L.'));
+$ok = $m->query()->where('active', 0)->delete();
+```
+
+Builder methods include `select`, `where`/`orWhere`/`whereRaw`/`whereIn`/`whereNull`/`whereNotNull`, `orderBy`, `limit`/`offset` (`take`/`skip`), `get`, `first`, `value`, `pluck`, `count`, `exists`, `insert`, `update`, `delete`, `toSql`, `getBindings`. All values are bound as parameters.
 
 ## Notes
 
