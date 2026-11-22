@@ -41,6 +41,13 @@ class Core_Controller
         return Core_View::render($template, $data, true);
     }
 
+    function renderLayout($template, $data = null, $layout = null)
+    {
+        if ($data === null) { $data = array(); }
+        if ($layout === null) { $layout = 'layouts/main'; }
+        return Core_View::make($template, $data, $layout);
+    }
+
     function db()
     {
         if ($this->db === null) {
