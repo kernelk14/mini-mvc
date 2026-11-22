@@ -297,4 +297,33 @@ class Core_Query
     {
         return $this->_bindings;
     }
+
+    function paginate($perPage = 15, $page = null, $pageParam = 'page')
+    {
+        $perPage = (int)$perPage;
+        if ($perPage < 1) { $perPage = 15; }
+        $pageParam = $pageParam ? (string)$pageParam : 'page';
+
+        if ($page === null) {
+            if (function_exists('input')) {
+                $page = input($pageParam, 1);
+            } elseif (isset($_GET[$pageParam])) {
+                $page = $_GET[$pageParam];
+            } else {
+                $page = 1;
+            }
+        }
+        $page = (int)$page;
+        if ($page < 1) { $page = 1; }
+
+        $total = $this->count();
+        $lastPage = $perPage > 0 ? (int)ceil($total / $perPage) : 1;
+        if ($lastPage < 1) { $lastPage = 1; }
+        if ($page > $lastPage) { $page = $lastPage; }
+
+        $offset = ($page - 1) * $perPage;
+        $items = $this->limit($perPage)->offset($offset)->get();
+
+        return new Core_Paginator($items, $total, $perPage, $page, $pageParam);
+    }
 }

@@ -104,7 +104,20 @@ $ok = $m->query()->where('id', $id)->update(array('name' => 'Ada L.'));
 $ok = $m->query()->where('active', 0)->delete();
 ```
 
-Builder methods include `select`, `where`/`orWhere`/`whereRaw`/`whereIn`/`whereNull`/`whereNotNull`, `orderBy`, `limit`/`offset` (`take`/`skip`), `get`, `first`, `value`, `pluck`, `count`, `exists`, `insert`, `update`, `delete`, `toSql`, `getBindings`. All values are bound as parameters.
+Builder methods include `select`, `where`/`orWhere`/`whereRaw`/`whereIn`/`whereNull`/`whereNotNull`, `orderBy`, `limit`/`offset` (`take`/`skip`), `get`, `first`, `value`, `pluck`, `count`, `exists`, `insert`, `update`, `delete`, `paginate`, `toSql`, `getBindings`. All values are bound as parameters.
+
+## Pagination
+
+```php
+$p = model('User')->query()->where('active', 1)
+        ->orderBy('id', 'desc')
+        ->paginate(15); // perPage, optional $page, optional $pageParam='page'
+
+foreach ($p->items() as $user) { /* $user['name'] */ }
+echo $p->links(); // HTML nav (preserves existing query params)
+```
+
+`paginate($perPage=15, $page=null, $pageParam='page')` returns `Core_Paginator`. It reads `input($pageParam)` by default. Paginator helpers: `items()`, `total()`, `perPage()`, `currentPage()`, `lastPage()`, `count()`, `isEmpty()`, `hasPages()`, `hasMore()`, `onFirstPage()`, `from()`, `to()`, `url($page)`, `previousPageUrl()`, `nextPageUrl()`, `setBaseUrl($url)`, `links($baseUrl=null,$window=2)`, `toArray()`. For APIs use `json($p->toArray())`.
 
 ## Notes
 

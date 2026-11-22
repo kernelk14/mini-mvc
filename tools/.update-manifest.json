@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated": "2026-11-22T11:37:15+01:00",
+  "generated": "2026-11-22T14:39:46+01:00",
   "managed": ["system"],
   "files": {
     "system/.htaccess": "15f54d49b4799d98e7643aea25b499ab",
@@ -13,7 +13,8 @@
     "system/core/Database.php": "1191339bf41311983f4c3ff7fc942609",
     "system/core/Loader.php": "ce3795815bb48ad20b9eb0594ac0d70a",
     "system/core/Model.php": "4534b9f65ae32296b5e6e4f8a0723d4d",
-    "system/core/Query.php": "0c45d6095dd1486f329f971bc58bd121",
+    "system/core/Paginator.php": "0d105683a4dc488a1006bab4accb9d7c",
+    "system/core/Query.php": "7d1161e82f2c4855590dfb2312767d52",
     "system/core/Request.php": "df7bb68b2cbb9686b0fd4254b89211a2",
     "system/core/Response.php": "12b3f5a293087bae787ea0fcd89b6d5d",
     "system/core/Router.php": "659808cc70447a5fd88058ac0a9f3243",
